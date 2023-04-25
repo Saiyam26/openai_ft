@@ -2,7 +2,7 @@ import json
 import os
 import openai
 import ujson
-os.environ['OPENAI_API_KEY'] = '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'
+os.environ['OPENAI_API_KEY'] = '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'
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 import torch
@@ -14,35 +14,50 @@ from langchain.vectorstores import FAISS
 from langchain.embeddings.openai import OpenAIEmbeddings
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
+# device = 'mps' if torch.backend.mps.is_available() else 'cpu'
+embed = OpenAIEmbeddings()
 
 with open('qasper-sample.json') as f:
     qasper = json.load(f)
 
 def get_embeddings(text):
     # Returns OpenAI embeddings()
-    
-    return torch.randn(1536)
+    print('embedding')
+    return embed.embed_query(text)
+    # return torch.randn(1536)
 
 pid = {}
 qid = {}
 embeddings_q, embeddings_p = {}, {}
 
-with open('collection.tsv', encoding='utf8') as f:
-    for line in f:
-        _line = line.split('\t')
-        pid[int(_line[0])] = _line[1]
-        embeddings_p[int(_line[0])] = get_embeddings(_line[1])
+# with open('collection.tsv', encoding='utf8') as f:
+#     for line in f:
+#         _line = line.split('\t')
+#         pid[int(_line[0])] = _line[1]
+#         embeddings_p[int(_line[0])] = get_embeddings(_line[1])
 
+# with open('./passage_embeddings.json', 'w') as f:
+#     json.dump(embeddings_p, f)
+
+cf = 0
 with open('queries.tsv', encoding='utf8') as f:
     for line in f:
+        cf+=1
         _line = line.split('\t')
         qid[int(_line[0])] = _line[1]
-        embeddings_q[int(_line[0])] = get_embeddings(_line[1])
+        embeddings_q[int(_line[0])] = embed.embed_query(_line[1])
+        if cf%250==0:
+            with open('./query_embeddings.json', 'w') as f:
+                json.dump(embeddings_q, f)
+
+with open('./query_embeddings.json', 'w') as f:
+    json.dump(embeddings_q, f)
 
 # print(embeddings_q)
 dataset = [] # (qid, pid, label)
 val_dataset = []
 
+'''
 with open('triples.jsonl') as f:
     for line in f:
         line = ujson.loads(line)
@@ -126,3 +141,4 @@ for epoch in range(10):
 
 print(train_loss)
 print(val_loss)
+'''
