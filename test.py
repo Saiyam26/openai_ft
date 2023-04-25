@@ -28,7 +28,9 @@ def get_embeddings(text):
 
 pid = {}
 qid = {}
-embeddings_q, embeddings_p = {}, {}
+# embeddings_q, embeddings_p = {}, {}
+with open('./query_embeddings.json') as f:
+    embeddings_q = json.load(f)
 
 # with open('collection.tsv', encoding='utf8') as f:
 #     for line in f:
@@ -44,14 +46,15 @@ with open('queries.tsv', encoding='utf8') as f:
     for line in f:
         cf+=1
         _line = line.split('\t')
+        if _line[0] in embeddings_q.keys():continue
         qid[int(_line[0])] = _line[1]
         embeddings_q[int(_line[0])] = embed.embed_query(_line[1])
         if cf%250==0:
             with open('./query_embeddings.json', 'w') as f:
-                json.dump(embeddings_q, f)
+                json.dump(embeddings_q, f, indent=2)
 
 with open('./query_embeddings.json', 'w') as f:
-    json.dump(embeddings_q, f)
+    json.dump(embeddings_q, f, indent=2)
 
 # print(embeddings_q)
 dataset = [] # (qid, pid, label)
